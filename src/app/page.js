@@ -20,8 +20,8 @@ export default function RadioApp() {
   // Guardar favoritos
   const toggleFavorite = (station) => {
     let updated;
-    if (favorites.find((f) => f.url === station.url)) {
-      updated = favorites.filter((f) => f.url !== station.url);
+    if (favorites.find((f) => f.url_resolved === station.url_resolved)) {
+      updated = favorites.filter((f) => f.url_resolved !== station.url_resolved);
     } else {
       updated = [...favorites, station];
     }
@@ -47,12 +47,25 @@ export default function RadioApp() {
       return;
     }
 
-    const res = await fetch(url);
-    const data = await res.json();
+    try {
+      const res = await fetch(url, {
+        headers: {
+          "User-Agent": "MyRadioApp/1.0 (joel@example.com)"
+        }
+      });
 
-    setStations(data);
-    setCurrentPage(page);
-    setLoading(false);
+      let data = await res.json();
+
+      // Filtrar solo emisoras seguras con HTTPS
+      data = data.filter((st) => st.url_resolved && st.url_resolved.startsWith("https://"));
+
+      setStations(data);
+      setCurrentPage(page);
+    } catch (error) {
+      console.error("Error al cargar emisoras:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -113,13 +126,13 @@ export default function RadioApp() {
                 onClick={() => toggleFavorite(station)}
                 className="text-yellow-400 font-bold text-lg"
               >
-                {favorites.find((f) => f.url === station.url) ? "★" : "☆"}
+                {favorites.find((f) => f.url_resolved === station.url_resolved) ? "★" : "☆"}
               </button>
             </div>
 
             {/* Reproductor dentro de la tarjeta */}
             <audio controls className="w-full mt-2">
-              <source src={station.url} type="audio/mpeg" />
+              <source src={station.url_resolved} type="audio/mpeg" />
               Tu navegador no soporta audio HTML5
             </audio>
           </li>
@@ -179,7 +192,7 @@ export default function RadioApp() {
                   </button>
                 </div>
                 <audio controls className="w-full mt-2">
-                  <source src={fav.url} type="audio/mpeg" />
+                  <source src={fav.url_resolved} type="audio/mpeg" />
                 </audio>
               </li>
             ))}
