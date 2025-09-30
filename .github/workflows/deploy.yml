@@ -13,20 +13,22 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Clonar el repositorio
+      # 1️⃣ Clonar repositorio
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2️⃣ Configurar Node.js y cache de pnpm
+      # 2️⃣ Instalar pnpm
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9  # o la versión que uses en tu proyecto
+
+      # 3️⃣ Configurar Node.js con cache de pnpm
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 20
           cache: pnpm
-
-      # 3️⃣ Instalar pnpm
-      - name: Install pnpm
-        run: npm install -g pnpm
 
       # 4️⃣ Instalar dependencias
       - name: Install dependencies
@@ -48,7 +50,7 @@ jobs:
       - name: Run Cypress tests
         run: pnpm dlx cypress run --browser electron --headless
 
-      # 9️⃣ Subir videos y screenshots como artifacts
+      # 9️⃣ Subir videos/screenshots como artifacts
       - name: Upload Cypress artifacts
         uses: actions/upload-artifact@v4
         with:
