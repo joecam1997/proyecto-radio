@@ -1,0 +1,67 @@
+name: Next.js Cypress E2E Tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  e2e-tests:
+    runs-on: windows-latest
+
+    steps:
+      # 1️⃣ Clonar el repositorio
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2️⃣ Configurar Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      # 3️⃣ Instalar pnpm globalmente
+      - name: Install pnpm
+        run: npm install -g pnpm
+
+      # 4️⃣ Instalar dependencias 
+      - name: Install dependencies
+        run: |
+        
+          pnpm install 
+
+      # 5️⃣ Build de Next.js usando Webpack (desactivar Turbopack)
+      - name: Build Next.js app
+        run: |
+       
+          pnpm dlx next build 
+
+      # 6️⃣ Iniciar servidor Next.js en background
+      - name: Start Next.js server
+        run: |
+       
+          pnpm dlx next start &
+
+      # 7️⃣ Esperar a que el servidor esté listo
+      - name: Wait for server to be ready
+        run:  pnpm dlx wait-on http://localhost:3000
+
+      # 8️⃣ Instalar Cypress
+      - name: Install Cypress binary
+        run:  pnpm dlx cypress install
+
+      # 9️⃣ Ejecutar pruebas E2E de Cypress
+      - name: Run Cypress E2E tests
+        run:  pnpm dlx cypress run --browser electron --headless
+
+      # 🔟 Subir videos y screenshots de Cypress
+      - name: Upload Cypress videos and screenshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-artifacts
+          path: |
+            cypress/videos
+            cypress/screenshots
