@@ -2,55 +2,57 @@ name: Next.js Cypress E2E Tests
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request:
-    branches:
-      - main
+    branches: [main]
 
 jobs:
   e2e-tests:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Clonar repositorio
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2️⃣ Instalar pnpm
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 9  # o la versión que uses en tu proyecto
+          version: 9
 
-      # 3️⃣ Configurar Node.js con cache de pnpm
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 20
           cache: pnpm
 
-      # 4️⃣ Instalar dependencias
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # 5️⃣ Build de Next.js
+      # Cache del binario de Cypress
+      - name: Cache Cypress binary
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/Cypress
+          key: ${{ runner.os }}-cypress-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-cypress-
+
+      # Instalar binario de Cypress si falta
+      - name: Install Cypress binary
+        run: pnpm dlx cypress install
+
       - name: Build Next.js app
         run: pnpm run build
 
-      # 6️⃣ Iniciar servidor Next.js en background
       - name: Start Next.js server
         run: pnpm run start &
-      
-      # 7️⃣ Esperar a que el servidor esté listo
+
       - name: Wait for server
         run: npx wait-on http://localhost:3000
 
-      # 8️⃣ Ejecutar pruebas E2E con Cypress
       - name: Run Cypress tests
         run: pnpm dlx cypress run --browser electron --headless
 
-      # 9️⃣ Subir videos/screenshots como artifacts
       - name: Upload Cypress artifacts
         uses: actions/upload-artifact@v4
         with:
