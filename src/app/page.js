@@ -36,11 +36,11 @@ export default function RadioApp() {
     let url = "";
 
     if (filter.country && filter.genre) {
-      url = `https://de1.api.radio-browser.info/json/stations/search?country=${filter.country}&tag=${filter.genre}&limit=${limit}&offset=${offset}`;
+      url = `https://all.api.radio-browser.info/json/stations/search?country=${filter.country}&tag=${filter.genre}&limit=${limit}&offset=${offset}`;
     } else if (filter.country) {
-      url = `https://de1.api.radio-browser.info/json/stations/bycountry/${filter.country}?limit=${limit}&offset=${offset}`;
+      url = `https://all.api.radio-browser.info/json/stations/bycountry/${filter.country}?limit=${limit}&offset=${offset}`;
     } else if (filter.genre) {
-      url = `https://de1.api.radio-browser.info/json/stations/bytag/${filter.genre}?limit=${limit}&offset=${offset}`;
+      url = `https://all.api.radio-browser.info/json/stations/bytag/${filter.genre}?limit=${limit}&offset=${offset}`;
     } else {
       alert("Ingresa género o país");
       setLoading(false);
