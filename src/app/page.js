@@ -7,7 +7,6 @@ export default function RadioApp() {
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState({ genre: "", country: "" });
 
-  // Paginación
   const [currentPage, setCurrentPage] = useState(1);
   const limit = 10; // radios por página
 
@@ -29,7 +28,7 @@ export default function RadioApp() {
     localStorage.setItem("favorites", JSON.stringify(updated));
   };
 
-  // Buscar emisoras con limit y offset
+  // Buscar emisoras
   const fetchStations = async (page = 1) => {
     setLoading(true);
     const offset = (page - 1) * limit;
@@ -48,21 +47,29 @@ export default function RadioApp() {
     }
 
     try {
-      const res = await fetch(url, {
-        headers: {
-          "User-Agent": "MyRadioApp/1.0 (joel@example.com)"
-        }
-      });
-
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Error HTTP: " + res.status);
       let data = await res.json();
 
-      // Filtrar solo emisoras seguras con HTTPS
-      data = data.filter((st) => st.url_resolved && st.url_resolved.startsWith("https://"));
+      // Filtrar emisoras HTTPS válidas para móvil
+      data = data.filter(
+        (st) =>
+          st.url_resolved &&
+          st.url_resolved.startsWith("https://") &&
+          st.name
+      );
+
+      if (data.length === 0) {
+        alert(
+          "No se encontraron emisoras válidas para este país/género en móvil."
+        );
+      }
 
       setStations(data);
       setCurrentPage(page);
-    } catch (error) {
-      console.error("Error al cargar emisoras:", error);
+    } catch (err) {
+      console.error("❌ Error al cargar emisoras:", err);
+      alert("No se pudieron cargar emisoras. Intenta de nuevo.");
     } finally {
       setLoading(false);
     }
@@ -108,25 +115,32 @@ export default function RadioApp() {
           >
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-3">
-                {station.favicon && (
+                {station.favicon ? (
                   <img
                     src={station.favicon}
                     alt={station.name}
                     className="w-12 h-12 object-contain rounded"
                     onError={(e) => (e.target.style.display = "none")}
                   />
+                ) : (
+                  <div className="w-12 h-12 bg-gray-600 rounded flex items-center justify-center text-sm">
+                    🎵
+                  </div>
                 )}
                 <div>
                   <p className="font-bold">{station.name}</p>
                   <p className="text-sm text-gray-400">{station.country}</p>
                 </div>
               </div>
-              {/* Favoritos */}
               <button
                 onClick={() => toggleFavorite(station)}
                 className="text-yellow-400 font-bold text-lg"
               >
-                {favorites.find((f) => f.url_resolved === station.url_resolved) ? "★" : "☆"}
+                {favorites.find(
+                  (f) => f.url_resolved === station.url_resolved
+                )
+                  ? "★"
+                  : "☆"}
               </button>
             </div>
 
@@ -171,13 +185,17 @@ export default function RadioApp() {
               >
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-3">
-                    {fav.favicon && (
+                    {fav.favicon ? (
                       <img
                         src={fav.favicon}
                         alt={fav.name}
                         className="w-12 h-12 object-contain rounded"
                         onError={(e) => (e.target.style.display = "none")}
                       />
+                    ) : (
+                      <div className="w-12 h-12 bg-gray-600 rounded flex items-center justify-center text-sm">
+                        🎵
+                      </div>
                     )}
                     <div>
                       <p className="font-bold">{fav.name}</p>
